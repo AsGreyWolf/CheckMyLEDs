@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">CheckMyLEDs</string>
+    <string name="RootOK">Have Root: TRUE</string>
+    <string name="RootNO">Have Root: FALSE</string>
+<string name="blink">blink</string>
+<string name="select_trigger">Select Trigger:</string>
+<string name="back">Back</string>
+<string name="trigger">Trigger</string>
+</resources>
