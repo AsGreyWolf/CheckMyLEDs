@@ -8,4 +8,7 @@
 <string name="select_trigger">Select Trigger:</string>
 <string name="back">Back</string>
 <string name="trigger">Trigger</string>
+<string name="capture">AudioVisualizer</string>
+<string name="from">0 at</string>
+<string name="to">MAX at</string>
 </resources>

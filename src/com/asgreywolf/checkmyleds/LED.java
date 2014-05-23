@@ -12,18 +12,27 @@ import android.util.Log;
 
 public class LED {
 	String brightness;
+	String max_brightness;
 	String blink;
 	String trigger;
-	
-	ArrayList<String> triggers=new ArrayList<String>();
-	int usedtrigger;
-	
-	int br;
-	boolean bl;
-	boolean rgb;
-	boolean rgb_s;
 	String rgb_start;
+	static String lcd="lcd-backlight";
+	static String echo="echo ";
+	static String to=" > ";
+	static String end="\n";
+	ArrayList<String> triggers=new ArrayList<String>();
+	int usedtrigger=0;
+	int br=255;
+	boolean bl=false;
+	int maxbr=255;
+	//boolean rgb;
+	//boolean rgb_s;
+	//String rgb_start;
 	String name;
+	
+	boolean usedMusic=false;
+	int musicValueTo=17;
+	int musicValueFrom=0;
 	boolean load(){
 		
 		File f=new File(brightness);
@@ -46,7 +55,7 @@ public class LED {
 				return false;
 		   }
 		   float bbr=Integer.parseInt(line);
-		   bbr=bbr/250*100;
+		   //bbr=bbr/250*100;
 		   br=(int) bbr;
 		   if(blink!=null){
 			f=new File(blink);
@@ -117,50 +126,135 @@ public class LED {
 					   trigger=null;
 				   }
 		   }
+		  if(max_brightness!=null){
+				f=new File(max_brightness);
+				if(!f.canRead()) max_brightness=null;
+					try {
+						fis = new FileInputStream(f);
+					} catch (FileNotFoundException e) {
+						Log.e("CheckMyLEDs", "Error loading LED", e);
+						max_brightness=null;
+					}
+				  isr = new InputStreamReader(fis);
+				   bufferedReader = new BufferedReader(isr);
+				   try {
+					   line= bufferedReader.readLine();
+					   bufferedReader.close();
+				   } catch (IOException e) {
+					   Log.e("CheckMyLEDs", "Error loading LED", e);
+					   max_brightness=null;
+				   }
+				   maxbr=Integer.parseInt(line);
+			   }
+		  //startMusic();
 		   return true;
 	}
 	void reset(MainActivity context){
 		try {
-			context.os.writeBytes("echo 0 > "+brightness+"\n");
-			br=0;
-			Log.e("CheckMyLEDs", "Resetting LED "+brightness);
+			buffer.setLength(0);
+			buffer.append(echo);
+			buffer.append(0);
+			buffer.append(to);
+			buffer.append(brightness);
+			buffer.append(end);
+			context.os.writeBytes(buffer.toString());
+			if(rgb_start!=null)
+			{
+				buffer.setLength(0);
+				buffer.append(echo);
+				buffer.append(0);
+				buffer.append(to);
+				buffer.append(rgb_start);
+				buffer.append(end);
+				context.os.writeBytes(buffer.toString());
+			}
+			//br=0;
+			//Log.e("CheckMyLEDs", "Resetting LED "+name);
 		} catch (IOException e) {
 			Log.e("CheckMyLEDs", "Error setting LED", e);
 		}
 	}
 	void setLight(int val,MainActivity context){
-		if(!name.equals("lcd-backlight") && !bl)
-			reset(context);
-		try {
-			float bbr=val;
-			bbr=bbr/100*250;
-			context.os.writeBytes("echo "+(int)bbr+" > "+brightness+"\n");
-			br=val;
-			
-			Log.e("CheckMyLEDs", "Setting LED "+brightness+" to "+(int)bbr);
-		} catch (IOException e) {
-			Log.e("CheckMyLEDs", "Error setting LED", e);
-		}
+		br=val;
+		write(context);
 	}
 	void setBlink(boolean val,MainActivity context){
-		try {
-			context.os.writeBytes("echo "+(val ? 1 : 0)+" > "+blink+"\n");
-			bl=val;
-			Log.e("CheckMyLEDs", "Setting LED "+blink+" to "+val);
-		} catch (IOException e) {
-			Log.e("CheckMyLEDs", "Error setting LED", e);
-		}
-		setLight(br,context);
+		bl=val;
+		write(context);
 	}
 	public void setTrigger(int id, MainActivity context) {
-		reset(context);
+		usedtrigger=id;
+		write(context);
+	}
+	StringBuilder buffer=new StringBuilder();
+	public void write(MainActivity context){
 		try {
-			context.os.writeBytes("echo "+triggers.get(id)+" > "+trigger+"\n");
-			usedtrigger=id;
-			Log.e("CheckMyLEDs", "Setting LED "+trigger+" to "+id);
+			if(!name.equals(lcd))
+			reset(context);
+			//if(usedtrigger!=0){
+			//	br=maxbr;
+			//	bl=false;
+			//}
+			if(blink!=null){
+				buffer.setLength(0);
+				buffer.append(echo);
+				buffer.append(bl ? 1 : 0);
+				buffer.append(to);
+				buffer.append(blink);
+				buffer.append(end);
+				context.os.writeBytes(buffer.toString());
+			}
+			if(trigger!=null)
+			{
+				buffer.setLength(0);
+				buffer.append(echo);
+				buffer.append(triggers.get(usedtrigger));
+				buffer.append(to);
+				buffer.append(trigger);
+				buffer.append(end);
+				context.os.writeBytes(buffer.toString());
+			}
+			buffer.setLength(0);
+			buffer.append(echo);
+			buffer.append((int)br);
+			buffer.append(to);
+			buffer.append(brightness);
+			buffer.append(end);
+			context.os.writeBytes(buffer.toString());
+			if(rgb_start!=null)
+			{
+				buffer.setLength(0);
+				buffer.append(echo);
+				buffer.append(1);
+				buffer.append(to);
+				buffer.append(rgb_start);
+				buffer.append(end);
+				context.os.writeBytes(buffer.toString());
+			}
 		} catch (IOException e) {
-			Log.e("CheckMyLEDs", "Error setting LED", e);
+			Log.e("CheckMyLEDs", "Error updating LED", e);
 		}
-		//setLight(br,context);
+	}
+	public void capture(int data, MainActivity context){
+		if(usedMusic)
+			if(musicValueTo>=musicValueFrom)
+				setLight(data>musicValueTo ? maxbr : (data<musicValueFrom ? 0 : (int)((data-musicValueFrom)*1.0f/(musicValueTo-musicValueFrom)*maxbr)), context);
+			else
+				setLight(data>musicValueFrom ? 0 : (data<musicValueTo ? maxbr : (int)((data-musicValueFrom)*1.0f/(musicValueTo-musicValueFrom)*maxbr)), context);
+	}
+	int savedState;
+	public void startMusic(){
+		if(!usedMusic)
+		savedState=br;
+		usedMusic=true;
+	}
+	public void stopMusic(MainActivity context){
+		if(usedMusic)
+			br=savedState;
+		usedMusic=false;
+		write(context);
+	}
+	public void close(MainActivity context){
+		stopMusic(context);
 	}
 }

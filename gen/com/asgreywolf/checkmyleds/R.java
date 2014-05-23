@@ -24,12 +24,17 @@ public final class R {
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
-        public static final int activity_main_lv=0x7f070001;
-        public static final int blink=0x7f070004;
-        public static final int brightness=0x7f070005;
-        public static final int name=0x7f070002;
+        public static final int activity_main_lv=0x7f070002;
+        public static final int audioBar=0x7f070001;
+        public static final int blink=0x7f070006;
+        public static final int brightness=0x7f070007;
+        public static final int capture=0x7f070008;
+        public static final int captureSizeFrom=0x7f070009;
+        public static final int captureSizeTo=0x7f07000a;
+        public static final int name=0x7f070004;
+        public static final int namespace=0x7f070003;
         public static final int rootstatus=0x7f070000;
-        public static final int trigger=0x7f070003;
+        public static final int trigger=0x7f070005;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;
@@ -41,7 +46,10 @@ public final class R {
         public static final int app_name=0x7f050000;
         public static final int back=0x7f050005;
         public static final int blink=0x7f050003;
+        public static final int capture=0x7f050007;
+        public static final int from=0x7f050008;
         public static final int select_trigger=0x7f050004;
+        public static final int to=0x7f050009;
         public static final int trigger=0x7f050006;
     }
     public static final class style {
